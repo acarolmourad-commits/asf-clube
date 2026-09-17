@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASF Clube — Carteirinha digital da associada</title>
+<meta name="description" content="Carteirinha digital e benefícios da associada da Associação de Surf Feminino. Satélite do app ASF.">
+<link rel="canonical" href="https://acarolmourad-commits.github.io/asf-clube/">
+<style>body{font-family:system-ui,sans-serif;margin:0;background:#fdf4ff;color:#4a044e}header{background:#a21caf;color:#fff;padding:2rem;text-align:center}nav{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;padding:1rem;background:#fae8ff}nav a{color:#86198f;text-decoration:none;font-size:.85rem}main{max-width:640px;margin:2rem auto;padding:0 1rem}.card{background:#fff;border-radius:16px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}input,select{width:100%;padding:.6rem;margin:.3rem 0;border:1px solid #f0abfc;border-radius:8px;box-sizing:border-box}button{background:#a21caf;color:#fff;border:0;border-radius:9999px;padding:.7rem 1.4rem;font-weight:700;cursor:pointer}#cart{background:linear-gradient(135deg,#a21caf,#db2777);color:#fff;border-radius:20px;padding:1.5rem;position:relative}#cart .num{font-size:.85rem;letter-spacing:2px}footer{text-align:center;padding:2rem;color:#a21caf}</style>
+</head>
+<body>
+<header><h1>ASF Clube 💳</h1><p>Sua carteirinha digital de associada</p></header>
+<nav id="net"></nav>
+<main>
+<div class="card" id="form"><h2>🌊 Gerar minha carteirinha</h2>
+<input id="nome" placeholder="Nome completo">
+<select id="nivel"><option>Iniciante</option><option>Em progressão</option><option>Intermediária</option><option>Avançada</option><option>Competidora</option></select>
+<input id="praia" placeholder="Praia base">
+<button onclick="gerar()">Gerar carteirinha</button>
+<p style="font-size:12px;color:#86198f">Demonstração local (localStorage). Associação oficial via WhatsApp no <a href="https://acarolmourad-commits.github.io/asf-app/">app ASF</a>.</p></div>
+<div id="cartwrap" style="display:none"><div id="cart"></div><div class="card"><h2>🎁 Benefícios da associada</h2><ul><li>Acesso aos grupos e mentorias da <a href="https://acarolmourad-commits.github.io/asf-comunidade/">Comunidade</a></li><li>Prioridade em eventos do <a href="https://acarolmourad-commits.github.io/asf-eventos/">ASF Eventos</a></li><li>Descontos em parceiros (anunciados nos canais oficiais)</li><li>XP em dobro no <a href="https://acarolmourad-commits.github.io/asf-ranking/">Ranking</a></li></ul><button onclick="reset()">Refazer carteirinha</button></div></div>
+</main>
+<footer>ASF Clube — satélite do app ASF</footer>
+<script>
+const SITES=[["asf-app","App ASF"],["asf-praias","Praias"],["asf-previsao","Previsão"],["asf-eventos","Eventos"],["asf-comunidade","Comunidade"],["asf-mentorias","Mentorias"],["asf-parceiras","Parceiras"],["asf-carona","Carona"],["asf-mercado","Mercado"],["asf-viagens","Viagens"],["asf-galeria","Galeria"],["asf-quiz","Quiz"],["asf-ranking","Ranking"],["asf-diario","Diário"],["asf-treino","Treino"],["asf-bemestar","Bem-Estar"],["asf-kids","Kids"],["asf-ponto","Ponto"],["asf-sonhos","Sonhos"]];
+document.getElementById('net').innerHTML=SITES.map(s=>`<a href="https://acarolmourad-commits.github.io/${s[0]}/">${s[1]}</a>`).join('');
+const K='asf-clube-card';
+function show(){const c=JSON.parse(localStorage.getItem(K)||'null');if(!c)return;document.getElementById('form').style.display='none';document.getElementById('cartwrap').style.display='block';document.getElementById('cart').innerHTML=`<div style="font-size:.75rem;opacity:.8">ASSOCIAÇÃO DE SURF FEMININO</div><h2 style="margin:.5rem 0">${c.nome}</h2><div>${c.nivel} · 🏖️ ${c.praia}</div><div class="num" style="margin-top:1rem">Nº ${c.num}</div><div style="position:absolute;right:1.2rem;bottom:1rem;font-size:2rem">🏄‍♀️</div>`;}
+function gerar(){const n=document.getElementById('nome').value.trim();if(!n)return alert('Informe seu nome!');localStorage.setItem(K,JSON.stringify({nome:n,nivel:document.getElementById('nivel').value,praia:document.getElementById('praia').value||'—',num:'ASF-'+Math.random().toString(36).slice(2,8).toUpperCase()}));show();}
+function reset(){localStorage.removeItem(K);location.reload();}
+show();
+</script>
+</body>
+</html>
