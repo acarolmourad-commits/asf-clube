@@ -1,0 +1,24 @@
+name: ASF LGPD Footer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asf-lgpd-footer.yml']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply LGPD footer patch
+        run: |
+          echo "IyBBU0YgTEdQRCBmb290ZXIgcGF0Y2ggKGlkZW1wb3RlbnRlKQpwID0gImluZGV4Lmh0bWwiCmggPSBvcGVuKHAsIGVuY29kaW5nPSJ1dGYtOCIpLnJlYWQoKQppZiAicHJpdmFjaWRhZGUiIGluIGgubG93ZXIoKToKICAgIHByaW50KCJqYSB0ZW0gbGluayBkZSBwcml2YWNpZGFkZTsgbmFkYSBhIGZhemVyIikKZWxpZiAiPC9ib2R5PiIgbm90IGluIGg6CiAgICBwcmludCgic2VtIDwvYm9keT47IHB1bGFuZG8iKQplbHNlOgogICAgc25pcCA9ICgiXG48IS0tIEFTRiBMR1BEIGZvb3RlciAtLT5cbjxmb290ZXIgc3R5bGU9XCJtYXJnaW4tdG9wOjQwcHg7cGFkZGluZzoxNnB4O3RleHQtYWxpZ246Y2VudGVyO2ZvbnQtc2l6ZToxMnB4O29wYWNpdHk6Ljc1XCI+IgogICAgICAiPGEgaHJlZj1cImh0dHBzOi8vYWNhcm9sbW91cmFkLWNvbW1pdHMuZ2l0aHViLmlvL2FzZi1hcHAvcHJpdmFjaWRhZGUuaHRtbFwiIHRhcmdldD1cIl9ibGFua1wiIHJlbD1cIm5vb3BlbmVyXCI+UG9sw610aWNhIGRlIFByaXZhY2lkYWRlPC9hPiDCtyAiCiAgICAgICI8YSBocmVmPVwiaHR0cHM6Ly9hY2Fyb2xtb3VyYWQtY29tbWl0cy5naXRodWIuaW8vYXNmLWFwcC9jb29raWVzLmh0bWxcIiB0YXJnZXQ9XCJfYmxhbmtcIiByZWw9XCJub29wZW5lclwiPlBvbMOtdGljYSBkZSBDb29raWVzPC9hPiDCtyAiCiAgICAgICI8YSBocmVmPVwiaHR0cHM6Ly9hY2Fyb2xtb3VyYWQtY29tbWl0cy5naXRodWIuaW8vYXNmLWFwcC90ZXJtb3MtZGUtdXNvLmh0bWxcIiB0YXJnZXQ9XCJfYmxhbmtcIiByZWw9XCJub29wZW5lclwiPlRlcm1vcyBkZSBVc288L2E+IMK3ICIKICAgICAgIkFTRiDigJQgQXNzb2NpYcOnw6NvIGRlIFN1cmYgRmVtaW5pbm88L2Zvb3Rlcj5cbjwvYm9keT4iKQogICAgaSA9IGgucmZpbmQoIjwvYm9keT4iKQogICAgaCA9IGhbOmldICsgc25pcCArIGhbaSs3Ol0KICAgIG9wZW4ocCwgInciLCBlbmNvZGluZz0idXRmLTgiKS53cml0ZShoKQogICAgcHJpbnQoImZvb3RlciBMR1BEIGFkaWNpb25hZG8iKQo=" | base64 -d > /tmp/patch.py
+          python3 /tmp/patch.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "ASF: footer LGPD (privacidade, cookies, termos)"
+          git push
