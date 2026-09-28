@@ -1,0 +1,41 @@
+name: og-image
+on:
+  push:
+    paths: [thumbnail.svg, .github/workflows/og-image.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin
+      - run: rsvg-convert thumbnail.svg -w 1200 -h 630 -o og-image.png
+      - name: inject og meta tags
+        run: |
+          python3 - <<'EOF'
+          import re,sys
+          p='index.html'
+          s=open(p,encoding='utf-8').read()
+          repo=__import__('os').environ['GITHUB_REPOSITORY'].split('/')[-1]
+          base='https://acarolmourad-commits.github.io' + ('' if repo=='acarolmourad-commits.github.io' else '/'+repo+'/')
+          img=base+'og-image.png'
+          if 'og:image' not in s:
+              tags=(f'<meta property="og:image" content="{img}">\n'
+                    f'<meta property="og:image:width" content="1200">\n'
+                    f'<meta property="og:image:height" content="630">\n'
+                    f'<meta name="twitter:image" content="{img}">\n')
+              s=s.replace('</head>',tags+'</head>',1)
+          s=re.sub(r'<meta name="twitter:card" content="summary">','<meta name="twitter:card" content="summary_large_image">',s)
+          if 'twitter:card' not in s:
+              s=s.replace('</head>','<meta name="twitter:card" content="summary_large_image">\n</head>',1)
+          open(p,'w',encoding='utf-8').write(s)
+          EOF
+      - name: commit
+        run: |
+          git config user.name "ASF Bot"
+          git config user.email "asf.surffeminino@gmail.com"
+          git add og-image.png index.html
+          git diff --cached --quiet || git commit -m "feat: thumbnail profissional (og:image 1200x630) + meta tags sociais"
+          git push
