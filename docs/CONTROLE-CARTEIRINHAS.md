@@ -1,36 +1,50 @@
-# 📇 Controle de Emissão de Carteirinhas
+# ASF Clube — Controle de Emissão de Carteirinhas
 
-Implementação do controle central de emissão proposto na issue #2, usando **Google Sheets + Apps Script** (opção 1 — simples e sem custo).
+## Regra oficial (30/09/2026)
+- **1 carteirinha por pessoa**, com **validade de 1 ano**
+- Se o nome já tem carteirinha válida (< 1 ano), o sistema retorna o número **existente** — nunca cria duplicata
+- **Renovação** (após 1 ano): preserva o número original, atualiza o registro (origem `site-renovacao`)
+- Numeração: **maior número existente + 1** (imune a exclusões de linhas)
 
 ## Componentes
-
-| Componente | Onde |
+| Peça | Onde vive |
 |---|---|
-| Planilha de registro (OFICIAL) | [ASF — Registro de Carteirinhas](https://docs.google.com/spreadsheets/d/1XVAma2w7qc0FJ-PJ385hoiT-3PKO1kmDiRxjPzOoA04/edit) |
-| Backend (Apps Script) | [`apps-script/Code.gs`](apps-script/Code.gs) |
-| Frontend (carteirinha) | `index.html` (esta página) |
+| Front-end | `index.html` (GitHub Pages) — trava o botão após emissão e reutiliza o número salvo |
+| Backend | `apps-script/Code.gs` (Apps Script vinculado à planilha) — fonte da verdade da regra |
+| Registro | Planilha oficial [ASF — Registro de Carteirinhas](https://docs.google.com/spreadsheets/d/1XVAma2w7qc0FJ-PJ385hoiT-3PKO1kmDiRxjPzOoA04/edit), aba `Carteirinhas` |
+| Deploy do backend | `.github/workflows/deploy-apps-script.yml` (automático a cada mudança em `apps-script/`) |
 
-> ⚠️ A planilha "ASF — Controle de Emissão de Carteirinhas" foi **descontinuada em 28/09/2026** (consolidação). Todos os registros vão apenas para a planilha oficial acima, aba **Carteirinhas** (colunas: timestamp · numero · nome · apelido · nivel · praia · cidade · insta · origem). A aba também tem um painel automático com total e contagem por nível (colunas K–L).
+## Configurar o deploy automático (uma vez só)
 
-## O que o controle garante
+### 1. Obter o Script ID
+1. Abra a planilha oficial → **Extensões → Apps Script**
+2. **Configurações do projeto** (⚙️) → copie o **ID do script**
+3. No GitHub: **Settings → Secrets and variables → Actions → New repository secret**
+   - Nome: `APPS_SCRIPT_ID` · Valor: o ID copiado
 
-- ✅ Número de membro **sequencial e único** (0001, 0002, ...) — substitui o número aleatório anterior
-- ✅ **Registro central** de todas as emissões (timestamp, número, nome, nível, origem) na planilha oficial
-- ✅ Proteção contra emissões simultâneas duplicadas (lock no Apps Script)
-- ✅ Possibilidade de **revogar** uma carteirinha apagando/marcando a linha na planilha
-- ✅ Consulta do total emitido via `GET` no endpoint
+### 2. Criar a Service Account no Google Cloud
+1. Acesse [console.cloud.google.com](https://console.cloud.google.com) com a conta asf.surffeminino@gmail.com
+2. Crie um projeto (ou use um existente) → **APIs e serviços → Biblioteca** → ative **Google Apps Script API**
+3. **IAM → Contas de serviço → Criar conta de serviço** (nome sugerido: `asf-clasp-deploy`)
+4. Crie uma **chave JSON** (Conta → Chaves → Adicionar chave → JSON) e baixe o arquivo
+5. No GitHub, crie o secret `CLASP_CREDENTIALS` com **todo o conteúdo do JSON**
 
-## Como implantar (passo a passo)
+### 3. Autorizar o acesso ao script
+1. No Apps Script: **Configurações do projeto** → ative **Google Apps Script API**
+2. No editor do Apps Script, clique em **Compartilhar** e adicione o e-mail da Service Account como **Editor**
 
-1. Abra a [planilha oficial](https://docs.google.com/spreadsheets/d/1XVAma2w7qc0FJ-PJ385hoiT-3PKO1kmDiRxjPzOoA04/edit) → **Extensões → Apps Script**
-2. Copie o conteúdo de [`apps-script/Code.gs`](apps-script/Code.gs) para o editor e salve
-3. **Implantar → Nova implantação → App da Web**
-   - Executar como: **Eu** (asf.surffeminino@gmail.com)
-   - Quem pode acessar: **Qualquer pessoa**
-4. Copie a URL gerada (termina em `/exec`)
-5. No `index.html`, defina `const API_URL = '<URL-do-/exec>'` no script da carteirinha. O formulário já chama `POST` com `{nome, nivel}` e usa o `numero` retornado para exibir na carteirinha
+### 4. Primeira implantação como Web App (única etapa manual)
+A Action envia o código (push), mas a **versão publicada** do Web App é controlada no editor:
+1. Após o primeiro run da Action, abra o Apps Script → **Implantar → Gerenciar implantações**
+2. Edite a implantação → **Nova versão** → Implantar
+3. Pronto: o endpoint `/exec` passa a rodar o código mais recente
 
-## Observações
+> Dica: para futuras mudanças de código, basta repetir a etapa 4 (nova versão). O código já estará lá via Action.
 
-- A numeração só passa a valer para emissões feitas **após** a implantação; carteirinhas antigas (número aleatório local) não ficam retroativamente registradas
-- LGPD: a planilha contém dados pessoais (nome). Mantenha o acesso restrito à conta asf.surffeminino@gmail.com
+## Teste de deduplicação (pós-deploy)
+Emita 2× seguidas com o mesmo nome pelo site. Esperado:
+- 1ª emissão → cria número novo
+- 2ª emissão → retorna **o mesmo número**, sem nova linha na planilha
+
+## Histórico de incidentes
+- **30/09/2026**: bug de emissão duplicada (backend fazia append sem checar existência). Davi recebeu 6 números (14–19), Milena 2 (20–21), Carol 2 (22–23). Planilha limpa mantendo os números originais (14, 20, 22). Correções: commit `a0366d3` (backend) e `e607c7c` (front).
