@@ -1,0 +1,55 @@
+# Deploy automático do Code.gs para o Apps Script vinculado à planilha oficial
+# "ASF — Registro de Carteirinhas".
+#
+# Dispara quando apps-script/Code.gs muda na main, ou manualmente (workflow_dispatch).
+#
+# SECRETS necessários (Settings → Secrets and variables → Actions):
+#   1. APPS_SCRIPT_ID  → ID do projeto Apps Script vinculado à planilha
+#      (Apps Script → Configurações do projeto → "IDs do projeto" → ID do script)
+#   2. CLASP_CREDENTIALS → conteúdo do JSON da Service Account do Google Cloud
+#      (ver docs/CONTROLE-CARTEIRINHAS.md para o passo a passo completo)
+#
+# Pré-requisitos no Google Cloud (uma vez só):
+#   - API "Google Apps Script API" ativada no projeto da Service Account
+#   - Apps Script → Configurações → "Google Apps Script API" habilitada
+#   - Script compartilhado como Editor com o e-mail da Service Account
+name: Deploy Apps Script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps-script/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar CLASP
+        run: npm install -g @google/clasp
+
+      - name: Configurar credenciais
+        env:
+          CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
+          APPS_SCRIPT_ID: ${{ secrets.APPS_SCRIPT_ID }}
+        run: |
+          mkdir -p ~/.credentials
+          echo "$CLASP_CREDENTIALS" > ~/.credentials/clasp-sa.json
+          printf '{"scriptId":"%s","rootDir":"%s"}' "$APPS_SCRIPT_ID" "apps-script" > .clasp.json
+          clasp login --creds ~/.credentials/clasp-sa.json
+
+      - name: Push do Code.gs para o Apps Script
+        run: clasp push --force
+
+      - name: Confirmar versão implantada
+        run: clasp versions | tail -5 || true
