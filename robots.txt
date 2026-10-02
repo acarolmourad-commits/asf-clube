@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://acarolmourad-commits.github.io/asf-clube/sitemap.xml
+
+Sitemap: https://clube.asf.surf/sitemap.xml
